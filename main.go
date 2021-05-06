@@ -15,10 +15,12 @@ type Options struct {
 	interval *int
 	verbose *bool
 }
+
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s [opts] <pid>\n", os.Args[0]);
 	flag.PrintDefaults()
 }
+
 func main() {
 	var opts Options
 
@@ -36,7 +38,7 @@ func main() {
 	// Try the argument as a pid first
 	ppid_x, err := strconv.ParseInt(flag.Arg(0), 10, 32)
 	if err != nil {
-		// Lookup the process
+		// Lookup the process by string key
 		ppid_lookup,err := lookupProcess(flag.Arg(0))
 		if err != nil {
 			fmt.Println("Invalid parent pid: ", err)
@@ -46,8 +48,8 @@ func main() {
 	}
 	ppid := int(ppid_x)
 
-	fs, _ := procfs.NewDefaultFS()
-	parent,err := fs.Proc(ppid)
+	// Get a handle to the parent process before monitoring
+	parent,err := procfs.NewProc(ppid)
 	if err != nil {
 		fmt.Printf("Could not monitor pid: %d\n", ppid)
 		os.Exit(1)
@@ -103,9 +105,9 @@ func runSample (opts Options, ppid int) error {
 		usec, ssec,
 		100 * usec / float64(*opts.interval),
 		100 * ssec / float64(*opts.interval),
-		time.Now().Format(time.RFC822Z),
+		time.Now().Format(time.RFC1123Z),
 	)
-	//fmt.Println("Got parent",parent)
+
 	return nil
 }
 
